@@ -1,90 +1,101 @@
-# Lista para almacenar info de los cheques relacionados al DNI
-cheques_encontrados = []
+import datetime
 
-# Contador para ver cuantas veces se repite el DNI
-repeticiones_dni = 0
+# Funcion para convertir las fechas a un formato legible
+def timestamp_a_fecha_legible(timestamp):
+    return datetime.datetime.fromtimestamp(int(timestamp)).strftime('%d-%m-%Y')
 
-# Abrir el archivo CSV en modo lectura
-with open("listado_cheques.csv", "r") as listadoCheques:
-    # Leer el contenido
-    lineas = listadoCheques.readlines()
+# Constantes descriptivas en vez de usar números mágicos
+NUMERO_DE_CHEQUE = 0
+CODIGO_BANCO = 1
+CODIGO_SUCURSAL = 2
+NUMERO_CUENTA_ORIGEN = 3
+NUMERO_CUENTA_DESTINO = 4
+VALOR = 5
+FECHA_ORIGEN = 6
+FECHA_PAGO = 7
+DNI = 8
+TIPO = 9
+ESTADO = 10
 
-# Pedir dni al usuario
+# Función para cargar los cheques relacionados con el DNI en un diccionario
+def cargar_cheques_por_dni(nombre_archivo, dni):
+    cheques = []
+    with open(nombre_archivo, "r") as archivo:
+        for linea in archivo:
+            datos = linea.strip().split(',')
+            if datos[DNI] == dni:
+                cheque = {
+                    "N° de cheque": datos[NUMERO_DE_CHEQUE],
+                    "Codigo Banco": datos[CODIGO_BANCO],
+                    "Codigo Sucursal": datos[CODIGO_SUCURSAL],
+                    "N° Cuenta Origen": datos[NUMERO_CUENTA_ORIGEN],
+                    "N° Cuenta Destino": datos[NUMERO_CUENTA_DESTINO],
+                    "Valor": datos[VALOR],
+                    "Fecha Origen": datos[FECHA_ORIGEN],
+                    "Fecha Pago": datos[FECHA_PAGO],
+                    "DNI": datos[DNI],
+                    "Tipo": datos[TIPO],
+                    "Estado": datos[ESTADO]
+                }
+                cheques.append(cheque)
+    return cheques
+
+# Función para filtrar cheques por tipo (emitido o depositado)
+def filtrar_cheques_por_tipo(cheques, tipo):
+    return [cheque for cheque in cheques if cheque["Tipo"] == tipo]
+
+# Función para mostrar los resultados en pantalla o guardar en un archivo CSV
+def mostrar_resultados(cheques, filtro_elegido, opcion_salida):
+    if not cheques:
+        print(f"No se encontraron cheques {filtro_elegido} relacionados al DNI {dni_ingresado}.")
+        return
+
+    if opcion_salida == "PANTALLA":
+        print(f"{len(cheques)} cheques {filtro_elegido} encontrados relacionados al DNI {dni_ingresado}:")
+        for indice, cheque in enumerate(cheques, start=1):
+            fecha_origen_legible = timestamp_a_fecha_legible(cheque["Fecha Origen"])
+            fecha_pago_legible = timestamp_a_fecha_legible(cheque["Fecha Pago"])
+            
+            print(f"Cheque {indice}:")
+            for clave, valor in cheque.items():
+                if clave in ("Fecha Origen", "Fecha Pago"):
+                    print(f"{clave}: {fecha_origen_legible}" if clave == "Fecha Origen" else f"{clave}: {fecha_pago_legible}")
+                else:
+                    print(f"{clave}: {valor}")
+            print("------------------------------")
+    elif opcion_salida == "CSV":
+        nombre_archivo_salida = input("Ingrese el nombre del archivo CSV de salida (sin la extensión): ") + ".csv"
+        with open(nombre_archivo_salida, "w") as archivo_salida:
+            for cheque in cheques:
+                linea = ",".join(str(valor) for valor in cheque.values())
+                archivo_salida.write(linea + "\n")
+        print(f"Los datos de los cheques {filtro_elegido} encontrados se han guardado en el archivo {nombre_archivo_salida}.")
+
+# Pedir DNI al usuario
 dni_ingresado = input("Ingresa el número de DNI a buscar: ")
 
-# Verificar si el DNI ingresado existe en el archivo
-dni_existente = any(dni_ingresado in linea_csv for linea_csv in lineas)
+# Cargar cheques relacionados con el DNI por medio de función
+cheques_encontrados = cargar_cheques_por_dni("listado_cheques.csv", dni_ingresado)
 
-if dni_existente:
-    for linea in lineas:
-        # Elimina espacios y separa por ","
-        archivo_ordenado = linea.strip().split(',')
-        # DNI esta en la posicion 8 en el archivo
-        dni = archivo_ordenado[8] 
-        if dni == dni_ingresado:
-            # Si hay coincidencia los carga en la lista y aumenta el contador
-            cheques_encontrados.append(archivo_ordenado)
-            repeticiones_dni += 1
-
-if cheques_encontrados:
-    # Pedir al usuario que filtre por cheque emitido o depositado
+if not cheques_encontrados:
+    print(f"No se encontraron cheques relacionados al DNI {dni_ingresado}.")
+else:
     while True:
-        opcion_filtro = input("Elige el tipo de cheque para mostrar emitido (E) o depositado (D)").upper()
+        opcion_filtro = input("Elige el tipo de cheque para mostrar (E para emitido o D para depositado): ").upper()
         if opcion_filtro in ("E", "D"):
             break
         else:
             print("Error, debe ingresar 'E' para emitido o 'D' para depositado.")
 
-    # Filtrar los cheques según la opción del usuario
-    if opcion_filtro == "E":
-        cheques_filtrados = [cheque for cheque in cheques_encontrados if cheque[9] == "EMITIDO"]
-        filtro_elegido = "emitidos"
-    else:
-        cheques_filtrados = [cheque for cheque in cheques_encontrados if cheque[9] == "DEPOSITADO"]
-        filtro_elegido = "depositados"
+    # Filtra los cheques encontrados usando una función
+    cheques_filtrados = filtrar_cheques_por_tipo(cheques_encontrados, "EMITIDO" if opcion_filtro == "E" else "DEPOSITADO")
+    filtro_elegido = "emitidos" if opcion_filtro == "E" else "depositados"
 
-    # Verificar si hay cheques después del filtro
-    if not cheques_filtrados:
-        print(f"No se encontraron cheques {filtro_elegido} relacionados al DNI {dni_ingresado}.")
-    else:
-        # Pedir al usuario mostrar cheques por pantalla o csv
-        while True:
-            opcion_salida = input("Elige una opción de salida (PANTALLA o CSV): ").upper()
-            if opcion_salida == "PANTALLA" or opcion_salida == "CSV":
-                break
-            else:
-                print("Opción no válida. Debe ingresar 'PANTALLA' o 'CSV'.")
-        
-        if opcion_salida == "PANTALLA":
-            # Muestra cantidad de cheques y dni en pantalla
-            print(f"{len(cheques_filtrados)} cheques {filtro_elegido} encontrados relacionados al DNI {dni_ingresado}:")
-            for indice, cheque in enumerate(cheques_filtrados, start=1):
-                # Muestra en pantalla los datos accediendo x la posición
-                print(f"Cheque {indice}:")
-                print("N° de cheque:", cheque[0])
-                print("Codigo Banco:", cheque[1])
-                print("Codigo Sucursal:", cheque[2])
-                print("N° Cuenta Origen:", cheque[3])
-                print("N° Cuenta Destino:", cheque[4])
-                print("Valor: $", cheque[5])
-                print("Fecha Origen:", cheque[6])
-                print("Fecha Pago:", cheque[7])
-                print("DNI:", cheque[8])
-                print("Tipo:", cheque[9])
-                print("Estado:", cheque[10])
-                print("------------------------------")
-        elif opcion_salida == "CSV":
-            # Pedir el nombre del archivo CSV de salida
-            nombre_archivo_salida = input("Ingrese el nombre del archivo CSV de salida (sin la extensión): ")
-            # Concatena la extension .csv al archivo
-            nombre_archivo_salida += ".csv"
+    while True:
+        opcion_salida = input("Elige una opción de salida (PANTALLA o CSV): ").upper()
+        if opcion_salida in ("PANTALLA", "CSV"):
+            break
+        else:
+            print("Opción no válida. Debe ingresar 'PANTALLA' o 'CSV'.")
 
-            # Abrir el archivo CSV de salida en modo escritura
-            with open(nombre_archivo_salida, "w") as archivo_salida:
-                for cheque in cheques_filtrados:
-                    linea = ",".join(cheque)
-                    archivo_salida.write(linea + "\n")
-
-            print(f"Los datos de los cheques {filtro_elegido} encontrados se han guardado en el archivo {nombre_archivo_salida}.")
-else:
-    print(f"No se encontraron cheques relacionados al DNI {dni_ingresado}.")
+    mostrar_resultados(cheques_filtrados, filtro_elegido, opcion_salida)
