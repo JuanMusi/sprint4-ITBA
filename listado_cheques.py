@@ -4,7 +4,7 @@ import datetime
 def timestamp_a_fecha_legible(timestamp):
     return datetime.datetime.fromtimestamp(int(timestamp)).strftime('%d-%m-%Y')
 
-# Constantes descriptivas en vez de usar números mágicos
+# Constantes descriptivas en vez de usar números mágicos (Entendí esto pero no se si está bien)
 NUMERO_DE_CHEQUE = 0
 CODIGO_BANCO = 1
 CODIGO_SUCURSAL = 2
