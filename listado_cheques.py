@@ -1,10 +1,10 @@
 import datetime
 
-# Funcion para convertir las fechas a un formato legible
+# Función para convertir las fechas a un formato legible
 def timestamp_a_fecha_legible(timestamp):
     return datetime.datetime.fromtimestamp(int(timestamp)).strftime('%d-%m-%Y')
 
-# Constantes descriptivas en vez de usar números mágicos (Entendí esto pero no se si está bien)
+# Constantes descriptivas en vez de usar "números mágicos"
 NUMERO_DE_CHEQUE = 0
 CODIGO_BANCO = 1
 CODIGO_SUCURSAL = 2
@@ -99,5 +99,3 @@ else:
             print("Opción no válida. Debe ingresar 'PANTALLA' o 'CSV'.")
 
     mostrar_resultados(cheques_filtrados, filtro_elegido, opcion_salida)
-
-    ### Falta el README 
