@@ -44,7 +44,7 @@ def cargar_cheques_por_dni(nombre_archivo, dni):
 def filtrar_cheques_por_tipo(cheques, tipo):
     return [cheque for cheque in cheques if cheque["Tipo"] == tipo]
 
-# Función para mostrar los resultados en pantalla o guardar en un archivo CSV
+# Función para mostrar los resultados en pantalla o guardar en CSV
 def mostrar_resultados(cheques, filtro_elegido, opcion_salida):
     if not cheques:
         print(f"No se encontraron cheques {filtro_elegido} relacionados al DNI {dni_ingresado}.")
@@ -99,3 +99,5 @@ else:
             print("Opción no válida. Debe ingresar 'PANTALLA' o 'CSV'.")
 
     mostrar_resultados(cheques_filtrados, filtro_elegido, opcion_salida)
+
+    ### Falta el README 
